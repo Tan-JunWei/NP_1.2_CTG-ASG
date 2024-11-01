@@ -18,6 +18,6 @@ This cryptosystem  aims to fufil the 5 goals of Cryptography, namely _Confidenti
 This cryptosystem includes the implementation of:
 - **Symmetric Cryptosystem**: Kuznyechik ("Grasshopper") - Symmetric Block Cipher
 - **Asymmetric Cryptosystem**: ElGamal Encryption System
-- **Cryptographic Hash Function**: TBC
+- **Cryptographic Hash Function**: BLAKE2b
 
 
