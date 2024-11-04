@@ -9,6 +9,9 @@ def gcd(a, b):
         return gcd(b, a % b)
 
 def gen_key(x):
+    """
+    Generates a key that has
+    """
     key = random.randint(pow(10,20), x)
 
     while gcd(x, key) != 1:
