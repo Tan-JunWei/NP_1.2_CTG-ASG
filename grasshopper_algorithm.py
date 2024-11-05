@@ -105,7 +105,8 @@ def kuznyechik_multiplication(x, y):
 
 
 # The input x is 128-bits (considered as a vector of sixteen bytes)
-# The return value is 8-bits
+# The return value is 8-
+# Also knowns as the L-Matrix
 def kuznyechik_linear_functional(x):
 	C = [148, 32, 133, 16, 194, 192, 1, 251, 1, 192, 194, 16, 133, 32, 148, 1] 
 	y = 0
