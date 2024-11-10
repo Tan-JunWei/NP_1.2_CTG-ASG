@@ -167,6 +167,7 @@ def kuznyechik_key_schedule(k):
 def kuznyechik_encrypt(x, k):
 	keys = kuznyechik_key_schedule(k)
 	for round in range(9):
+			print(f"{round}: {keys[round]}")
 			x = L(S(x ^ keys[round]))
 	return x ^ keys[-1]
 
