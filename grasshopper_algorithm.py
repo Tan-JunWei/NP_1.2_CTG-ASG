@@ -1,7 +1,10 @@
 #source code is from https://github.com/jacksoninfosec/kuznyechik/blob/main/kuznyechik.py
 #modifited to fits our needs
 
+#TOFIX: decrpytion goes haywire upon entering more then 16 characters. 
 
+#the key
+k = int('8899aabbccddeeff0011223344556677fedcba98765432100123456789abcdef', 16)
 
 #S-box for encryption
 pi = [252, 238, 221, 17, 207, 110, 49, 22, 251, 196, 250, 218, 35, 197, 4, 77, 
@@ -22,7 +25,7 @@ pi = [252, 238, 221, 17, 207, 110, 49, 22, 251, 196, 250, 218, 35, 197, 4, 77,
      89, 166, 116, 210, 230, 244, 180, 192, 209, 102, 175, 194, 57, 75, 99, 182]
 
 
-#S-box for decrpytion
+#Inverse S-box for decrpytion
 pi_inv = [165, 45, 50, 143, 14, 48, 56, 192, 84, 230, 158, 57, 85, 126, 82, 145, 
          100, 3, 87, 90, 28, 96, 7, 24, 33, 114, 168, 209, 41, 198, 164, 63, 
          224, 39, 141, 12, 130, 234, 174, 180, 154, 99, 73, 229, 66, 228, 21, 183, 
@@ -166,8 +169,9 @@ def kuznyechik_key_schedule(k):
 # The key k is 256-bits 
 def kuznyechik_encrypt(x, k):
 	keys = kuznyechik_key_schedule(k)
+	print("ENCRYPTION KEY")
 	for round in range(9):
-			print(f"{round}: {keys[round]}")
+			print(f"Key {round}: {keys[round]}") #prints the unique key that will be used each round of encryption 
 			x = L(S(x ^ keys[round]))
 	return x ^ keys[-1]
 
@@ -175,31 +179,67 @@ def kuznyechik_encrypt(x, k):
 # The ciphertext x is 128-bits
 # The key k is 256-bits 
 def kuznyechik_decrypt(x, k):
+	print("DECRYPTION KEY")
 	keys = kuznyechik_key_schedule(k)
 	keys.reverse()
 	for round in range(9):
+			print(f"Key {round}: {keys[round]}") #prints the unique key that will be used each round of dencryption 
 			x = S_inv(L_inv(x ^ keys[round]))
 	return x ^ keys[-1]
 
+# Converts string into hex for the encryption
+def string_to_hex(string):
+	hex_representation = string.encode('utf-8').hex()
+	return hex_representation
+
+# Converts the hex back into string
+def hex_to_string(hex_string):
+	return bytes.fromhex(hex_string).decode('utf-8')
+
+def split_into_16_char_blocks(text):
+    # Split the text into chunks of 16 characters each
+    blocks = [text[i:i + 16] for i in range(0, len(text), 16)]
+    return blocks
 
 
-# plaintext
-PT = int('1122334455667700ffeeddccbbaa9988', 16)
+def main():
+	# plaintext
+	user_input = input("Enter the string: ")
 
-# key
-k = int('8899aabbccddeeff0011223344556677fedcba98765432100123456789abcdef', 16)
+	#checks if the len is more then 16, breaks it up into blocks of 16 
+	if len(user_input) > 16:
+		string_block = split_into_16_char_blocks(user_input)
+	print(string_block)
 
-# ciphertext
-CT = kuznyechik_encrypt(PT, k)
-print(hex(CT))
+	DT_block = []
+	for blocks in string_block:
+		PT = string_to_hex(blocks)
+		PT = int(PT, 16)
+		print(f"PT Block: {hex(PT)}") #shows the Plain Text block in hex
 
-# decrypted text
-DT = kuznyechik_decrypt(CT, k)
+		# ciphertext
+		print("-" * 16 + " ENCRYPTION " + "-" * 16 + "\n")
+		CT = kuznyechik_encrypt(PT, k)
+		print(f"\nHex CT: {hex(CT)}")
+		print()
+		# decrypted text
+		print("-" * 16 + " DECRYPTION " + "-" * 16 + "\n")
+		DT = kuznyechik_decrypt(CT, k)
+		print()
+		print(f"Hex DT: {hex(DT)}") #return the hex values of the DT
 
-# The plaintext should equal the decrypted text. 
-print(PT == DT)
+		# The plaintext should equal the decrypted text. 
+		print(f"\nPT == DT: {PT == DT}")
+
+		DT = hex(DT)[2:] #remove the "0x" for the function
+		DT = hex_to_string(DT)
+		DT_block.append(DT) #returns the decrypted text
+
+	DT_text = "".join(DT_block)
+	print(f"DT Text: {DT_text}")
 
 
 
 
-
+if 1 == 1:
+	main()
