@@ -1,5 +1,5 @@
 # Source code is from https://github.com/jacksoninfosec/kuznyechik/blob/main/kuznyechik.py
-# Modifited to fits our needs
+# Modified to fit our needs
 
 
 # The master key
@@ -61,7 +61,7 @@ def S_inv(x):
 	return y
 
 
-# x and y are nonnegative integers 
+# x and y are non-negative integers 
 # Their associated binary polynomials are multiplied. 
 # The associated integer to this product is returned. 
 def multiply_ints_as_polynomials(x, y):
@@ -86,7 +86,7 @@ def number_bits(x):
 	return nb
 
 
-# x is a nonnegative integer
+# x is a non-negative integer
 # m is a positive integer
 def mod_int_as_polynomial(x, m):
 	nbm = number_bits(m)
@@ -240,7 +240,4 @@ def main():
 	print(f"DT Text: {DT_text}")
 
 
-
-
-if 1 == 1:
-	main()
+main()
