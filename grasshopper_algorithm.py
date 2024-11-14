@@ -1,12 +1,11 @@
-#source code is from https://github.com/jacksoninfosec/kuznyechik/blob/main/kuznyechik.py
-#modifited to fits our needs
+# Source code is from https://github.com/jacksoninfosec/kuznyechik/blob/main/kuznyechik.py
+# Modifited to fits our needs
 
-#TOFIX: decrpytion goes haywire upon entering more then 16 characters. 
 
-#the key
+# The master key
 k = int('8899aabbccddeeff0011223344556677fedcba98765432100123456789abcdef', 16)
 
-#S-box for encryption
+# S-box for encryption
 pi = [252, 238, 221, 17, 207, 110, 49, 22, 251, 196, 250, 218, 35, 197, 4, 77, 
      233, 119, 240, 219, 147, 46, 153, 186, 23, 54, 241, 187, 20, 205, 95, 193, 
      249, 24, 101, 90, 226, 92, 239, 33, 129, 28, 60, 66, 139, 1, 142, 79, 
@@ -25,7 +24,7 @@ pi = [252, 238, 221, 17, 207, 110, 49, 22, 251, 196, 250, 218, 35, 197, 4, 77,
      89, 166, 116, 210, 230, 244, 180, 192, 209, 102, 175, 194, 57, 75, 99, 182]
 
 
-#Inverse S-box for decrpytion
+# Inverse S-box for decrpytion
 pi_inv = [165, 45, 50, 143, 14, 48, 56, 192, 84, 230, 158, 57, 85, 126, 82, 145, 
          100, 3, 87, 90, 28, 96, 7, 24, 33, 114, 168, 209, 41, 198, 164, 63, 
          224, 39, 141, 12, 130, 234, 174, 180, 154, 99, 73, 229, 66, 228, 21, 183, 
@@ -171,7 +170,7 @@ def kuznyechik_encrypt(x, k):
 	keys = kuznyechik_key_schedule(k)
 	print("ENCRYPTION KEY")
 	for round in range(9):
-			print(f"Key {round}: {keys[round]}") #prints the unique key that will be used each round of encryption 
+			print(f"Key {round}: {keys[round]}") # prints the unique key that will be used each round of encryption 
 			x = L(S(x ^ keys[round]))
 	return x ^ keys[-1]
 
@@ -183,7 +182,7 @@ def kuznyechik_decrypt(x, k):
 	keys = kuznyechik_key_schedule(k)
 	keys.reverse()
 	for round in range(9):
-			print(f"Key {round}: {keys[round]}") #prints the unique key that will be used each round of dencryption 
+			print(f"Key {round}: {keys[round]}") # prints the unique key that will be used each round of dencryption 
 			x = S_inv(L_inv(x ^ keys[round]))
 	return x ^ keys[-1]
 
@@ -206,16 +205,18 @@ def main():
 	# plaintext
 	user_input = input("Enter the string: ")
 
-	#checks if the len is more then 16, breaks it up into blocks of 16 
+	# checks if the len is more then 16, breaks it up into blocks of 16 
 	if len(user_input) > 16:
 		string_block = split_into_16_char_blocks(user_input)
+	else: 
+		string_block = user_input
 	print(string_block)
 
 	DT_block = []
 	for blocks in string_block:
 		PT = string_to_hex(blocks)
 		PT = int(PT, 16)
-		print(f"PT Block: {hex(PT)}") #shows the Plain Text block in hex
+		print(f"PT Block: {hex(PT)}") # shows the Plain Text block in hex
 
 		# ciphertext
 		print("-" * 16 + " ENCRYPTION " + "-" * 16 + "\n")
