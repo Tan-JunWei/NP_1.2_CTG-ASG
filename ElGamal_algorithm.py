@@ -6,7 +6,7 @@ https://www.geeksforgeeks.org/elgamal-encryption-algorithm
 https://www.sciencedirect.com/topics/computer-science/discrete-logarithm
 https://medium.com/@MatinGhanbari/the-elgamal-encryption-algorithm-dc1dc4442281#:~:text=The%20ElGamal%20encryption%20algorithm%20is%20a%20public%20key%20encryption%20scheme,%E2%89%A4%20x%20%E2%89%A4%20p%20%E2%88%92%202.
 
-1. Key Generation
+1. Key Generation 🔑
 
 ## Public Parameters: 
 - Select a large prime number p (p should be large enough to make it difficult to solve the discrete logarithm problem)
@@ -17,7 +17,7 @@ every element in Z*p. Choosing a generator leverages the cyclic group structure 
 
 The values p and g are public parameters, and can be shared openly. 
 
-## Discrete logarithm - What is it?
+➕➖✖️➗🟰 Discrete logarithm - What is it? 
 A logarithm is the opposite of exponentiation. For example, in the equation 2^3 = 8, the base is 2, the exponent is 3, and the result is
 8. 
 The logarithm of 8 with base 2 is 3. The discrete logarithm problem is the problem of finding the exponent when the base and the result 
@@ -31,11 +31,11 @@ This problem is difficult to solve when p is large enough. The security of the E
 the discrete logarithm problem (computationally hard).
 
 
-## Private Key:
+🔏 Private Key:
 - Select a random integer x such that 1 ≤ x ≤ (p-2)
 The private key is x.
 
-## Public Key:
+📢 Public Key:
 - Compute h = g^x mod p. 
 The public key is (p, g, h).
 
@@ -67,84 +67,83 @@ the same in both cases.
 The receiver then computes the original message m = C2 * S^-1 mod p, where S^-1 is the modular inverse of S.
 '''
 
-# Python program to illustrate ElGamal encryption
-import random 
-from math import pow
+import random
+from sympy import mod_inverse
 
-a = random.randint(2, 10)
+# Key Generation
+def generate_keys():
+    # Public parameters
+    # p = 23  # Large prime number, for simplicity, we're using a small prime here
+    # g = 5   # Generator, must be primitive root modulo p
 
-def gcd(a, b):
-    if a < b:
-        return gcd(b, a)
-    elif a % b == 0:
-        return b;
-    else:
-        return gcd(b, a % b)
+    # TODO: Choose a random large prime number and a generator
+    p = 29
+    g = 2
 
-# Generating large random numbers
-def gen_key(q):
-    key = random.randint(pow(10, 20), q)
-    while gcd(q, key) != 1:
-        key = random.randint(pow(10, 20), q)
+    # Private key
+    # x = random.randint(1, p - 2)
+    x = 5
 
-    return key
+    # Public key
+    h = pow(g, x, p)
 
-# Modular exponentiation
-def power(a, b, c):
-    x = 1
-    y = a
+    return (p, g, h), x
 
-    while b > 0:
-        if b % 2 != 0:
-            x = (x * y) % c;
-        y = (y * y) % c
-        b = int(b / 2)
+# Encryption
+def encrypt(public_key, message):
+    p, g, h = public_key
 
-    return x % c
+    # Ensure message is in the valid range
+    if not (1 <= message <= p - 1):
+        raise ValueError("Message must be in the range 1 <= m <= p-1")
 
-# Asymmetric encryption
-def encrypt(msg, q, h, g):
-    en_msg = []
+    # Random integer k
+    # k = random.randint(1, p - 2)
+    k = 4
 
-    k = gen_key(q)# Private key for sender
-    s = power(h, k, q)
-    p = power(g, k, q)
-    
-    for i in range(0, len(msg)):
-        en_msg.append(msg[i])
+    # Compute C1 and C2
+    C1 = pow(g, k, p)
+    S = pow(h, k, p)
+    C2 = (message * S) % p
 
-    print("g^k used : ", p)
-    print("g^ak used : ", s)
-    for i in range(0, len(en_msg)):
-        en_msg[i] = s * ord(en_msg[i])
+    print(f"C1 = {C1}, C2 = {C2}, S = {S}")
 
-    return en_msg, p
+    return (C1, C2)
 
-def decrypt(en_msg, p, key, q):
-    dr_msg = []
-    h = power(p, key, q)
-    for i in range(0, len(en_msg)):
-        dr_msg.append(chr(int(en_msg[i]/h)))
-        
-    return dr_msg
+# Decryption
+def decrypt(private_key, public_key, ciphertext):
+    p, g, h = public_key
+    C1, C2 = ciphertext
+    x = private_key
 
-# Driver code
-def main():
-    msg = 'encryption'
-    print("Original Message :", msg)
+    # Compute shared secret S
+    S = pow(C1, x, p)
+    print(f"Shared Secret S = {S}")
 
-    q = random.randint(pow(10, 20), pow(10, 50))
-    g = random.randint(2, q)
+    # Compute modular inverse of S
+    S_inv = mod_inverse(S, p)
+    print(f"Modular Inverse of S = {S_inv}")
 
-    key = gen_key(q)# Private key for receiver
-    h = power(g, key, q)
-    print("g used : ", g)
-    print("g^a used : ", h)
+    # Recover the message
+    message = (C2 * S_inv) % p
+    print(f"Recovered Message = {message}")
+    return message
 
-    en_msg, p = encrypt(msg, q, h, g)
-    dr_msg = decrypt(en_msg, p, key, q)
-    dmsg = ''.join(dr_msg)
-    print("Decrypted Message :", dmsg);
+# Example usage
+if __name__ == "__main__":
+    # Key generation
+    public_key, private_key = generate_keys()
+    print("Public Key:", public_key)
+    print("Private Key:", private_key)
 
-if __name__ == '__main__':
-    main()
+    # Message to encrypt
+    message = 6  # Example message
+    print("Original Message:", message)
+
+    # Encrypt
+    ciphertext = encrypt(public_key, message)
+    print("Ciphertext:", ciphertext)
+
+    # Decrypt
+    decrypted_message = decrypt(private_key, public_key, ciphertext)
+    print("Decrypted Message:", decrypted_message)
