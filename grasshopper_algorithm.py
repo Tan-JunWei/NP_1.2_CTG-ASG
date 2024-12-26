@@ -140,8 +140,8 @@ def L(x):
 	return x
 
 
-# The input value x and the output value are 128-bits
-def L_inv(x):
+# The input value x and the output value are 128-bits 
+def L_inv(x): 
 	for _ in range(16):
 		x = R_inv(x)
 	return x
@@ -201,19 +201,35 @@ def split_into_16_char_blocks(text):
     return blocks
 
 
-def main():
-	# plaintext
-	user_input = input("Enter the string: ")
 
-	# checks if the len is more then 16, breaks it up into blocks of 16 
-	if len(user_input) > 16:
-		string_block = split_into_16_char_blocks(user_input)
-	else: 
-		string_block = user_input
-	print(string_block)
+def main_process_less_than_16_char(string_block): # Without the for loop (Less then 16 char)
 
+	PT = string_to_hex(string_block)
+	PT = int(PT, 16)
+	print(f"PT Text: {hex(PT)}") # shows the Plain Text in hex (NOTE: because is less then 16 char, the whole text is a block)
+
+	# ciphertext
+	print("-" * 16 + " ENCRYPTION " + "-" * 16 + "\n")
+	CT = kuznyechik_encrypt(PT, k)
+	print(f"\nHex CT: {hex(CT)}")
+	print()
+	# decrypted text
+	print("-" * 16 + " DECRYPTION " + "-" * 16 + "\n")
+	DT = kuznyechik_decrypt(CT, k)
+	print()
+	print(f"Hex DT: {hex(DT)}") #return the hex values of the DT
+
+	# The plaintext should equal the decrypted text. 
+	print(f"\nPT == DT: {PT == DT}")
+
+	DT = hex(DT)[2:] #remove the "0x" for the function
+	DT = hex_to_string(DT)
+	
+	return DT  #returns the decrypted text
+
+def main_process_more_than_16_char(string_block): # With the for loop.
 	DT_block = []
-	for blocks in string_block:
+	for blocks in string_block: # I hate how this causes a problem, but its here to fix one.
 		PT = string_to_hex(blocks)
 		PT = int(PT, 16)
 		print(f"PT Block: {hex(PT)}") # shows the Plain Text block in hex
@@ -235,6 +251,23 @@ def main():
 		DT = hex(DT)[2:] #remove the "0x" for the function
 		DT = hex_to_string(DT)
 		DT_block.append(DT) #returns the decrypted text
+	return DT_block	
+
+#TOFIX: Make it so that if the text is less then 16 char, the breaking of texts doesn't occur.
+
+def main():
+	# plaintext
+	user_input = input("Enter the string: ")
+
+	# checks if the len is more then 16, breaks it up into blocks of 16 
+	if len(user_input) > 16:
+		string_block = split_into_16_char_blocks(user_input)
+		DT_block = main_process_more_than_16_char(string_block)
+		
+	else: 
+		string_block = user_input
+		DT_block = main_process_less_than_16_char(string_block)
+
 
 	DT_text = "".join(DT_block)
 	print(f"DT Text: {DT_text}")
