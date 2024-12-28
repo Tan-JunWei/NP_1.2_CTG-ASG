@@ -68,110 +68,76 @@ The receiver then computes the original message m = C2 * S^-1 mod p, where S^-1 
 '''
 
 import random
-from sympy import mod_inverse, randprime, primefactors
-import math
-
-def smallest_primitive_root(p):
-    """
-    Finds the smallest primitive root for a large prime p.
-    
-    Args:
-        p (int): A large prime number.
-        
-    Returns:
-        int: The smallest primitive root g for the prime p.
-    """
-    
-    # Compute phi(p), which for a prime p is p-1
-    phi = p - 1
-    
-    # Get the prime factors of phi(p)
-    factors = primefactors(phi)
-    
-    # Test potential generators in increasing order
-    for g in range(2, p):  # Start testing from 2 upwards
-        valid = True
-        
-        # Check g^((p-1)/q) mod p != 1 for all prime factors q of phi(p)
-        for q in factors:
-            if pow(g, phi // q, p) == 1:
-                valid = False
-                break
-        
-        if valid:
-            return g
-
+from sympy import mod_inverse
 
 # Key Generation
-def generate_keys(): 
+def generate_keys():
     # Public parameters
-    p = randprime(math.pow(10,20), math.pow(10,50)) # Generate large prime number
-    print(f"Prime number p = {p}")
+    # p = 23  # Large prime number, for simplicity, we're using a small prime here
+    # g = 5   # Generator, must be primitive root modulo p
 
-    # Compute Generator (primitive root modulo p). smallest primitive root is used for simplicity
-    g = smallest_primitive_root(p) 
-    print(f"Generator g = {g}")
+    # TODO: Choose a random large prime number and a generator
+    p = 29
+    g = 2
 
     # Private key
-    x = random.randint(1, p - 2)
+    # x = random.randint(1, p - 2)
+    x = 5
 
     # Public key
     h = pow(g, x, p)
 
     return (p, g, h), x
 
+# Encryption
 def encrypt(public_key, message):
     p, g, h = public_key
-    encrypted_message = []
 
-    for char in message:
-        # Convert character to ASCII value
-        m = ord(char)
-        
-        # Ensure m is within the valid range (1 ≤ m ≤ p-1)
-        if not (1 <= m <= p - 1):
-            raise ValueError(f"Character {char} is out of the valid range for encryption")
+    # Ensure message is in the valid range
+    if not (1 <= message <= p - 1):
+        raise ValueError("Message must be in the range 1 <= m <= p-1")
 
-        # Random integer k where 1 ≤ k ≤ p-2
-        k = random.randint(1, p - 2)
+    # Random integer k
+    # k = random.randint(1, p - 2)
+    k = 4
 
-        C1 = pow(g, k, p)            # C1 = g^k mod p
-        S = pow(h, k, p)             # Shared secret S = h^k mod p
-        C2 = (m * S) % p             # C2 = (m * S) mod p
+    # Compute C1 and C2
+    C1 = pow(g, k, p)
+    S = pow(h, k, p)
+    C2 = (message * S) % p
 
-        encrypted_message.append((C1, C2))
+    print(f"C1 = {C1}, C2 = {C2}, S = {S}")
 
-    return encrypted_message # list of ciphertext pairs
+    return (C1, C2)
 
-def decrypt(private_key, public_key, encrypted_message):
-    p, g, _ = public_key
-    key = private_key
-    decrypted_message = []
+# Decryption
+def decrypt(private_key, public_key, ciphertext):
+    p, g, h = public_key
+    C1, C2 = ciphertext
+    x = private_key
 
-    for C1, C2 in encrypted_message:
-        # Receiver computes the shared secret S = C1^key mod p
-        S = pow(C1, key, p)
-        
-        # Compute the original ASCII value m = (C2 * S^-1) mod p
-        S_inv = pow(S, -1, p)
-        m = (C2 * S_inv) % p
-        
-        # Convert numeric ASCII value back to character
-        decrypted_message.append(chr(m))
+    # Compute shared secret S
+    S = pow(C1, x, p)
+    print(f"Shared Secret S = {S}")
 
-    return ''.join(decrypted_message)
+    # Compute modular inverse of S
+    S_inv = mod_inverse(S, p)
+    print(f"Modular Inverse of S = {S_inv}")
 
+    # Recover the message
+    message = (C2 * S_inv) % p
+    print(f"Recovered Message = {message}")
+    return message
+
+# Example usage
 if __name__ == "__main__":
     # Key generation
-    print("--- Key Generation ---\n")
     public_key, private_key = generate_keys()
     print("Public Key:", public_key)
     print("Private Key:", private_key)
 
     # Message to encrypt
-    print("\n--- Encryption ---\n")
-
-    message = "Hello"
+    message = 6  # Example message
     print("Original Message:", message)
 
     # Encrypt
@@ -179,6 +145,5 @@ if __name__ == "__main__":
     print("Ciphertext:", ciphertext)
 
     # Decrypt
-    print("\n--- Decryption ---\n")
     decrypted_message = decrypt(private_key, public_key, ciphertext)
     print("Decrypted Message:", decrypted_message)
