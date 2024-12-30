@@ -20,4 +20,29 @@ This cryptosystem includes the implementation of:
 - **Asymmetric Cryptosystem**: ElGamal Encryption System
 - **Cryptographic Hash Function**: BLAKE2b
 
+### Getting Started
+
+1. Clone the Git repository:
+
+```bash
+git clone https://github.com/Tan-JunWei/NP_1.2_CTG-ASG-Python-script.git
+```
+
+2. Navigate to folder:
+
+```bash
+cd NP_1.2_CTG-ASG-Python-script
+```
+
+3. Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+4. Run the script (Integration [WIP]):
+
+```bash
+python < script-name >.py
+```
 
