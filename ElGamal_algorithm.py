@@ -69,6 +69,7 @@ The receiver then computes the original message m = C2 * S^-1 mod p, where S^-1 
 
 import random
 from sympy import mod_inverse, randprime, primefactors
+from colorama import Fore, Style
 import math
 
 def smallest_primitive_root(p):
@@ -170,17 +171,22 @@ if __name__ == "__main__":
     print("Private Key:", private_key)
 
     # Message to encrypt
-    message = "Hello"  # Example message
+    original_message = "RUN AWAY"  # Example message
 
-    print("Original Message:", message)
+    print("Original Message: " + Fore.LIGHTYELLOW_EX + original_message + Style.RESET_ALL)
 
     # Encrypt
     print("\n--- Encryption ---\n")
-    ciphertext = encrypt(public_key, message)
+    ciphertext = encrypt(public_key, original_message)
     print("Ciphertext:", ciphertext)
 
     # Decrypt
     print("\n--- Decryption ---\n")
 
     decrypted_message = decrypt(private_key, public_key, ciphertext)
-    print("Decrypted Message:", decrypted_message)
+    print("Decrypted Message: " + Fore.LIGHTYELLOW_EX + decrypted_message + Style.RESET_ALL)
+
+    if decrypted_message == original_message: # output original message = decrypted message
+        print(Fore.LIGHTGREEN_EX + "Decryption successful! " + Style.RESET_ALL + "Decrypted message matches original message.") 
+    else:
+        print(Fore.RED + "Decryption was unsuccessful! Something must have went wrong!" + Style.RESET_ALL)
