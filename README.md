@@ -17,10 +17,23 @@ This cryptosystem  aims to fufil the 5 goals of Cryptography, namely _Confidenti
 
 This cryptosystem includes the implementation of:
 - **Symmetric Cryptosystem**: Kuznyechik ("Grasshopper") - Symmetric Block Cipher
+
 - **Asymmetric Cryptosystem**: ElGamal Encryption System
+<div align="center">
+  <img align="center" width="900" src="./assets/ElGamal Diagram.png" alt="ElGamal Diagram" />
+  <h4>Visual Representation of the ElGamal Encryption System</h4>
+</div>
+
 - **Cryptographic Hash Function**: BLAKE2b
 
-### Getting Started
+## Integration 
+
+<div align="center">
+  <img align="center" width="900" src="./assets/integration.png" alt="Diagram of cryptosystem with the integration of all 3" />
+  <h4>Diagram of Integrated Cryptosystem</h4>
+</div>
+
+# Getting Started
 
 1. Clone the Git repository:
 
@@ -40,9 +53,9 @@ cd NP_1.2_CTG-ASG-Python-script
 pip install -r requirements.txt
 ```
 
-4. Run the script (Integration [WIP]):
+4. Run the integrated script (WIP):
 
 ```bash
-python < script-name >.py
+python < INTEGRATED-script-name >.py
 ```
 
