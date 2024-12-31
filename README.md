@@ -16,22 +16,39 @@ This cryptosystem  aims to fufil the 5 goals of Cryptography, namely _Confidenti
 # How the cryptosystem works
 
 This cryptosystem includes the implementation of:
+
 - **Symmetric Cryptosystem**: Kuznyechik ("Grasshopper") - Symmetric Block Cipher
 
-- **Asymmetric Cryptosystem**: ElGamal Encryption System
 <div align="center">
-  <img align="center" width="900" src="./assets/ElGamal Diagram.png" alt="ElGamal Diagram" />
+  <img align="center" width="800" src="./assets/Kuznyechik Diagram.png" alt="Kuznyechik Diagram" />
+  <h4>Diagram of Kuznyechik ("Grasshopper") - Symmetric Block Cipher</h4>
+</div>
+
+- **Asymmetric Cryptosystem**: ElGamal Encryption System
+
+<div align="center">
+  <img align="center" width="800" src="./assets/ElGamal Diagram.png" alt="ElGamal Diagram" />
   <h4>Visual Representation of the ElGamal Encryption System</h4>
 </div>
 
 - **Cryptographic Hash Function**: BLAKE2b
 
-## Integration 
+# Integration 
+
+The integration of these 3 cryptographic components into a single, integrated cryptosystem ensures that all the goals of cryptography (`Confidentiality`,
+`Integrity`, `Availability`, `Authentication`, `Non-repudiation`) can be achieved effectively.
 
 <div align="center">
-  <img align="center" width="900" src="./assets/integration.png" alt="Diagram of cryptosystem with the integration of all 3" />
+  <img align="center" width="800" src="./assets/integration.png" alt="Diagram of cryptosystem with the integration of all 3 algorithms" />
   <h4>Diagram of Integrated Cryptosystem</h4>
 </div>
+
+## Integration workflow (steps)
+
+1. 
+2. 
+3. 
+4. 
 
 # Getting Started
 
