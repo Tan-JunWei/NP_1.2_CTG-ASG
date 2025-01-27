@@ -2,6 +2,7 @@
 # Modified to fit our needs
 
 
+
 # The master key
 k = int('8899aabbccddeeff0011223344556677fedcba98765432100123456789abcdef', 16)
 
@@ -204,19 +205,22 @@ def split_into_16_char_blocks(text):
 
 def main_process_less_than_16_char(string_block): # Without the for loop (Less then 16 char)
 
+	
 	PT = string_to_hex(string_block)
 	PT = int(PT, 16)
-	print(f"PT Text: {hex(PT)}") # shows the Plain Text in hex (NOTE: because is less then 16 char, the whole text is a block)
+	print(f"PT Text: {hex(PT)}") # shows the Plain Text in hex (NOTE: because is less then 16 char, the whole text is treated as a111 block)
 
 	# ciphertext
 	print("-" * 16 + " ENCRYPTION " + "-" * 16 + "\n")
 	CT = kuznyechik_encrypt(PT, k)
-	print(f"\nHex CT: {hex(CT)}")
+
+	print(f"\nHex CT: {hex(CT)}, CT: {CT}")
 	print()
 	# decrypted text
 	print("-" * 16 + " DECRYPTION " + "-" * 16 + "\n")
 	DT = kuznyechik_decrypt(CT, k)
 	print()
+	print(DT)
 	print(f"Hex DT: {hex(DT)}") #return the hex values of the DT
 
 	# The plaintext should equal the decrypted text. 
@@ -237,13 +241,14 @@ def main_process_more_than_16_char(string_block): # With the for loop.
 		# ciphertext
 		print("-" * 16 + " ENCRYPTION " + "-" * 16 + "\n")
 		CT = kuznyechik_encrypt(PT, k)
-		print(f"\nHex CT: {hex(CT)}")
+		print(f"\nHex CT: {hex(CT)}, , CT: {CT}")
 		print()
 		# decrypted text
 		print("-" * 16 + " DECRYPTION " + "-" * 16 + "\n")
-		DT = kuznyechik_decrypt(CT, k)
+		DT = kuznyechik_decrypt(CT, k)															
 		print()
-		print(f"Hex DT: {hex(DT)}") #return the hex values of the DT
+		print(DT)
+		print(f"Hex DT: {hex(DT)}") # return the hex values of the DT
 
 		# The plaintext should equal the decrypted text. 
 		print(f"\nPT == DT: {PT == DT}")
