@@ -188,7 +188,7 @@ def split_into_16_char_blocks(text):
     blocks = [text[i:i + 16] for i in range(0, len(text), 16)]
     return blocks
 
-def main_process_less_than_16_char(string_block): # Without the for loop (Less then 16 char)
+def encrypt_process_less_than_16_char(string_block): # Without the for loop (Less then 16 char)
 
 	PT = string_to_hex(string_block)
 	PT = int(PT, 16)
@@ -197,47 +197,74 @@ def main_process_less_than_16_char(string_block): # Without the for loop (Less t
 	# ciphertext
 	# print("-" * 16 + " ENCRYPTION " + "-" * 16 + "\n")
 	CT = kuznyechik_encrypt(PT, k)
-	# print(f"\nHex CT: {hex(CT)}")
-	# print()
-	# decrypted text
+	print(f"\nHex CT: {hex(CT)}")
+
+	# CT = hex(CT)
+	
+	return CT  #returns the encrypted text
+
+def encrypt_process_more_than_16_char(string_block): # With the for loop.
+	CT_block = []
+	for blocks in string_block: # I hate how this causes a problem, but its here to fix one.
+		PT = string_to_hex(blocks)
+		PT = int(PT,16)
+		print(f"PT Block: {hex(PT)}, PT: {PT}") # shows the Plain Text block in hex
+
+		CT = kuznyechik_encrypt(PT, k)
+
+		# CT = hex(CT)   # hex the CT
+       
+		CT_block.append(CT) # return encrypted hex values
+	return CT_block	
+
+def decrypt_process_less_than_16_char(ciphertext):
+	CT = ciphertext
+	print(f"CT: {hex(CT)}, CT: {CT}") # shows the Plain Text in hex (NOTE: because is less then 16 char, the whole text is a block)
+
 	# print("-" * 16 + " DECRYPTION " + "-" * 16 + "\n")
 	DT = kuznyechik_decrypt(CT, k)
-	# print()
-	# print(f"Hex DT: {hex(DT)}") #return the hex values of the DT
+	print()
+	print(f"Hex DT: {hex(DT)}, DT: {DT}") #return the hex values of the DT
 
-	# The plaintext should equal the decrypted text. 
-	# print(f"\nPT == DT: {PT == DT}")
 
 	DT = hex(DT)[2:] #remove the "0x" for the function
 	DT = hex_to_string(DT)
 	
-	return DT  #returns the decrypted text
-
-def main_process_more_than_16_char(string_block): # With the for loop.
+	return DT
+    
+def decrypt_process_more_than_16_char(hex_block):
 	DT_block = []
-	for blocks in string_block: # I hate how this causes a problem, but its here to fix one.
-		PT = string_to_hex(blocks)
-		PT = int(PT, 16)
-		print(f"PT Block: {hex(PT)}") # shows the Plain Text block in hex
+	for blocks in hex_block: # I hate how this causes a problem, but its here to fix one.
+		CT = int(blocks,16)
+		print(f"CT Block: {hex(CT)}, CT: {CT}") # shows the Cipher Text block in hex
 
-		# ciphertext
-		# print("-" * 16 + " ENCRYPTION " + "-" * 16 + "\n")
-		CT = kuznyechik_encrypt(PT, k)
-		# print(f"\nHex CT: {hex(CT)}")
-		# print()
 		# decrypted text
-		# print("-" * 16 + " DECRYPTION " + "-" * 16 + "\n")
+		print("-" * 16 + " DECRYPTION " + "-" * 16 + "\n")
 		DT = kuznyechik_decrypt(CT, k)
-		# print()
-		# print(f"Hex DT: {hex(DT)}") #return the hex values of the DT
-
-		# The plaintext should equal the decrypted text. 
-		# print(f"\nPT == DT: {PT == DT}")
+		print()
+		print(f"Hex DT: {hex(DT)}, DT: {DT}") # return the hex values of the DT
 
 		DT = hex(DT)[2:] #remove the "0x" for the function
 		DT = hex_to_string(DT)
 		DT_block.append(DT) #returns the decrypted text
 	return DT_block	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ##### ELGAMAL ALGORITHM FUNCTIONS #####
 
@@ -346,14 +373,15 @@ def main():
     if len(user_input) > 16:
         # Split into 16-character blocks and process
         string_block = split_into_16_char_blocks(user_input)
-        encrypted_blocks = main_process_more_than_16_char(string_block)
+        encrypted_blocks = encrypt_process_more_than_16_char(string_block)
     else:
         # Process as a single block
-        encrypted_blocks = main_process_less_than_16_char(user_input)
+        encrypted_blocks = encrypt_process_less_than_16_char(user_input)
 
     # Combine encrypted blocks into a single ciphertext (if necessary)
-    ciphertext = "".join(encrypted_blocks) if isinstance(encrypted_blocks, list) else encrypted_blocks
-    print(f"Ciphertext: {ciphertext}") # <- TOFIX: This is not the ciphertext, but the decrypted text. May need a function to show ciphertext?
+    ciphertext = encrypted_blocks
+    # ciphertext = "".join(encrypted_blocks) if isinstance(encrypted_blocks, list) else encrypted_blocks
+    print(f"Ciphertext: {ciphertext}") 
 
     # Step 4: Encrypt Kuznyechik key with ElGamal
     print("\n--- Encrypting Kuznyechik Key with ElGamal ---")
@@ -372,19 +400,21 @@ def main():
     decrypted_kuznyechik_key_str = decrypt(private_key, public_key, encrypted_kuznyechik_key)
     decrypted_kuznyechik_key = int(decrypted_kuznyechik_key_str, 16)  # Convert back to integer
     print(f"Decrypted Kuznyechik Key (Hex): {hex(decrypted_kuznyechik_key)}")
+    print(ciphertext)
 
     # Step 6: Decrypt plaintext with Kuznyechik
     print("\n--- Decrypting Plaintext with Kuznyechik ---")
-    if len(ciphertext) > 16:
-        # Split into 16-character blocks and process
-        string_block = split_into_16_char_blocks(ciphertext)
-        decrypted_blocks = main_process_more_than_16_char(string_block)
+    if type(ciphertext) == list:
+        decrypted_blocks = []
+        for nums in ciphertext:
+            decrypted_blocks.append(decrypt_process_less_than_16_char(nums))
+            print(decrypted_blocks)
+        decrypted_text = "".join(decrypted_blocks)
     else:
-        # Process as a single block
-        decrypted_blocks = main_process_less_than_16_char(ciphertext)
+        decrypted_text = decrypt_process_less_than_16_char(ciphertext)
 
     # Combine decrypted blocks into the final plaintext
-    decrypted_text = "".join(decrypted_blocks) if isinstance(decrypted_blocks, list) else decrypted_blocks
+    # decrypted_text = "".join(decrypted_blocks) if isinstance(decrypted_blocks, list) else decrypted_blocks
     print(f"Decrypted Text: {decrypted_text}")
 
     # Verify that the decrypted text matches the original input
