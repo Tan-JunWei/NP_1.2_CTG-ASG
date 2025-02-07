@@ -42,6 +42,10 @@ This cryptosystem includes the implementation of:
 </div>
 
 - **Cryptographic Hash Function**: BLAKE2b
+<div align="center">
+  <img align="center" width="800" src="./assets/blake2b.png" alt="blake2b Diagram" />
+  <h4>Visual Representation of the blake2b hash cipher</h4>
+</div>
 
 # Integration 
 
