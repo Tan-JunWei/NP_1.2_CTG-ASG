@@ -1,11 +1,12 @@
 import random
-import hashlib  # <-- Imported for BLAKE2b hashing
+import hashlib  # For BLAKE2b hashing
 from sympy import mod_inverse, randprime, primefactors
 from colorama import Fore, Style
 import math
 
 ##### KUZNYECHIK (GRASSHOPPER) ALGORITHM FUNCTIONS #####
 
+# Kuznyechik key (256-bit) defined at the start
 k = int('8899aabbccddeeff0011223344556677fedcba98765432100123456789abcdef', 16)
 
 # S-box for encryption
@@ -44,7 +45,6 @@ pi_inv = [165, 45, 50, 143, 14, 48, 56, 192, 84, 230, 158, 57, 85, 126, 82, 145,
           144, 208, 36, 52, 203, 237, 244, 206, 153, 16, 68, 64, 146, 58, 1, 38, 
           18, 26, 72, 104, 245, 129, 139, 199, 214, 32, 10, 8, 0, 76, 215, 116] 
 
-# The input x and the output y have 128-bits
 def S(x):
     y = 0
     for i in reversed(range(16)):
@@ -52,7 +52,6 @@ def S(x):
         y ^= pi[(x >> (8 * i)) & 0xff]
     return y
 
-# The input x and the output y have 128-bits
 def S_inv(x):
     y = 0
     for i in reversed(range(16)):
@@ -60,79 +59,65 @@ def S_inv(x):
         y ^= pi_inv[(x >> (8 * i)) & 0xff]
     return y
 
-# x and y are non-negative integers 
-# Their associated binary polynomials are multiplied. 
 def multiply_ints_as_polynomials(x, y):
     if x == 0 or y == 0:
         return 0
     z = 0
-    while x != 0:
-        if x & 1 == 1:
+    while x:
+        if x & 1:
             z ^= y
         y <<= 1
-        x >>= 1
+        x //= 2
     return z
 
-# Returns the number of bits that are used to store the positive integer x.
 def number_bits(x):
     nb = 0
-    while x != 0:
+    while x:
         nb += 1
-        x >>= 1
+        x //= 2
     return nb
 
-# x is a non-negative integer; m is a positive integer
 def mod_int_as_polynomial(x, m):
     nbm = number_bits(m)
-    while True:
-        nbx = number_bits(x) 
-        if nbx < nbm:
-            return x
-        mshift = m << (nbx - nbm)
-        x ^= mshift
+    while number_bits(x) >= nbm:
+        x ^= m << (number_bits(x) - nbm)
+    return x
 
-# x,y are 8-bits; the output value is 8-bits
 def kuznyechik_multiplication(x, y):
     z = multiply_ints_as_polynomials(x, y)
     m = int('111000011', 2)
     return mod_int_as_polynomial(z, m)
 
-# The input x is 128-bits (considered as a vector of sixteen bytes)
 def kuznyechik_linear_functional(x):
-    C = [148, 32, 133, 16, 194, 192, 1, 251, 1, 192, 194, 16, 133, 32, 148, 1] 
+    C = [148, 32, 133, 16, 194, 192, 1, 251, 1, 192, 194, 16, 133, 32, 148, 1]
     y = 0
-    while x != 0:
+    while x:
         y ^= kuznyechik_multiplication(x & 0xff, C.pop())
-        x >>= 8
+        x //= 256
     return y
 
-# The input value x and the output value is 128-bits
 def R(x):
     a = kuznyechik_linear_functional(x)
-    return (a << 8 * 15) ^ (x >> 8)
+    return (a << (8 * 15)) ^ (x >> 8)
 
-# The input value x and the output value is 128-bits
 def R_inv(x):
-    a = x >> 15 * 8
-    x = (x << 8) & (2 ** 128 - 1)
+    a = x >> (15 * 8)
+    x = (x << 8) & (2**128 - 1)
     b = kuznyechik_linear_functional(x ^ a)
     return x ^ b
 
-# The input value x and the output value is 128-bits; this function is the composition of R sixteen times
 def L(x):
     for _ in range(16):
         x = R(x)
     return x
 
-# The input value x and the output value are 128-bits 
-def L_inv(x): 
+def L_inv(x):
     for _ in range(16):
         x = R_inv(x)
     return x
 
-# k is 256-bits; the key schedule algorithm returns 10 keys of 128-bits each
 def kuznyechik_key_schedule(k):
-    keys = [] 
+    keys = []
     a = k >> 128
     b = k & (2 ** 128 - 1)
     keys.append(a)
@@ -140,95 +125,94 @@ def kuznyechik_key_schedule(k):
     for i in range(4):
         for j in range(8):
             c = L(8 * i + j + 1)
-            (a, b) = (L(S(a ^ c)) ^ b, a) 
+            a, b = L(S(a ^ c)) ^ b, a
         keys.append(a)
         keys.append(b)
     return keys
 
-# The plaintext x is 128-bits; the key k is 256-bits 
-def kuznyechik_encrypt(x, k):
-    keys = kuznyechik_key_schedule(k)
-    print("ENCRYPTION KEY")
+# New functions that accept a precomputed key schedule:
+def kuznyechik_encrypt_with_keys(x, keys):
     for round in range(9):
-        print(f"Key {round}: {keys[round]}")
         x = L(S(x ^ keys[round]))
     return x ^ keys[-1]
 
-# The ciphertext x is 128-bits; the key k is 256-bits 
-def kuznyechik_decrypt(x, k):
-    print("DECRYPTION KEY")
-    keys = kuznyechik_key_schedule(k)
-    keys.reverse()
+def kuznyechik_decrypt_with_keys(x, keys):
+    rev_keys = keys[::-1]
     for round in range(9):
-        print(f"Key {round}: {keys[round]}")
-        x = S_inv(L_inv(x ^ keys[round]))
-    return x ^ keys[-1]
+        x = S_inv(L_inv(x ^ rev_keys[round]))
+    return x ^ rev_keys[-1]
 
-# Converts string into hex for the encryption
 def string_to_hex(string):
-    hex_representation = string.encode('utf-8').hex()
-    return hex_representation
+    return string.encode('utf-8').hex()
 
-# Converts the hex back into string
 def hex_to_string(hex_string):
     return bytes.fromhex(hex_string).decode('utf-8')
 
 def split_into_16_char_blocks(text):
-    # Split the text into chunks of 16 characters each
-    blocks = [text[i:i + 16] for i in range(0, len(text), 16)]
-    return blocks
+    return [text[i:i + 16] for i in range(0, len(text), 16)]
 
+# Updated multi-block encryption function that computes the keys once.
+def encrypt_process_more_than_16_char(string_blocks):
+    CT_blocks = []
+    keys = kuznyechik_key_schedule(k)
+    print("ENCRYPTION KEY")
+    for round in range(9):
+        print(f"Key {round}: {keys[round]}")
+    for block in string_blocks:
+        PT = string_to_hex(block)
+        PT_int = int(PT, 16)
+        print(f"PT Block (Hex): {hex(PT_int)}")
+        CT = kuznyechik_encrypt_with_keys(PT_int, keys)
+        print(f"Hex CT (of PT Block): {hex(CT)}")
+        CT_blocks.append(CT)
+    return CT_blocks
+
+# Updated multi-block decryption function that uses the precomputed keys.
+def decrypt_process_more_than_16_char(ciphertext_blocks):
+    DT_blocks = []
+    keys = kuznyechik_key_schedule(k)
+    keys_rev = keys[::-1]
+    print("DECRYPTION KEY")
+    for round in range(9):
+        print(f"Key {round}: {keys_rev[round]}")
+    for block in ciphertext_blocks:
+        DT = kuznyechik_decrypt_with_keys(block, keys)
+        DT_hex = hex(DT)[2:]
+        if len(DT_hex) % 2:
+            DT_hex = "0" + DT_hex
+        DT_blocks.append(hex_to_string(DT_hex))
+    return DT_blocks
+
+# For short messages (one block), we still call the single-block functions.
 def encrypt_process_less_than_16_char(string_block):
-    # Without the for loop (Less than 16 char)
     PT = string_to_hex(string_block)
-    PT = int(PT, 16)
-    print(f"PT (Hex): {hex(PT)}")
-    CT = kuznyechik_encrypt(PT, k)
-    print(f"\nHex CT: {hex(CT)}")
+    PT_int = int(PT, 16)
+    print(f"PT (Hex): {hex(PT_int)}")
+    # Compute keys once for a single block.
+    keys = kuznyechik_key_schedule(k)
+    print("ENCRYPTION KEY")
+    for round in range(9):
+        print(f"Key {round}: {keys[round]}")
+    CT = kuznyechik_encrypt_with_keys(PT_int, keys)
+    print(f"Hex CT: {hex(CT)}")
     return CT
 
-def encrypt_process_more_than_16_char(string_block):
-    CT_block = []
-    for blocks in string_block:
-        PT = string_to_hex(blocks)
-        PT = int(PT, 16)
-        print(f"PT Block (Hex): {hex(PT)}, PT: {PT}")
-        CT = kuznyechik_encrypt(PT, k)
-        print(f"\nHex CT (of PT Block): {hex(CT)}")
-        print(f"Ciphertext (of PT Block): {CT}\n")
-        CT_block.append(CT)
-    return CT_block
-
 def decrypt_process_less_than_16_char(ciphertext):
-    CT = ciphertext
-    print(f"CT: {hex(CT)}, CT: {CT}")
-    DT = kuznyechik_decrypt(CT, k)
-    print()
-    print(f"Hex DT: {hex(DT)}, DT: {DT}")
-    DT = hex(DT)[2:]
-    DT = hex_to_string(DT)
-    return DT
-
-def decrypt_process_more_than_16_char(hex_block):
-    DT_block = []
-    for blocks in hex_block:
-        CT = int(blocks, 16)
-        print(f"CT Block: {hex(CT)}, CT: {CT}")
-        print("-" * 16 + " DECRYPTION " + "-" * 16 + "\n")
-        DT = kuznyechik_decrypt(CT, k)
-        print()
-        print(f"Hex DT: {hex(DT)}, DT: {DT}")
-        DT = hex(DT)[2:]
-        DT = hex_to_string(DT)
-        DT_block.append(DT)
-    return DT_block
+    print(f"CT (Hex): {hex(ciphertext)}")
+    keys = kuznyechik_key_schedule(k)
+    keys_rev = keys[::-1]
+    print("DECRYPTION KEY")
+    for round in range(9):
+        print(f"Key {round}: {keys_rev[round]}")
+    DT = kuznyechik_decrypt_with_keys(ciphertext, keys)
+    DT_hex = hex(DT)[2:]
+    if len(DT_hex) % 2:
+        DT_hex = "0" + DT_hex
+    return hex_to_string(DT_hex)
 
 ##### ELGAMAL ALGORITHM FUNCTIONS #####
 
 def smallest_primitive_root(p):
-    """
-    Finds the smallest primitive root for a large prime p.
-    """
     phi = p - 1
     factors = primefactors(phi)
     for g in range(2, p):
@@ -240,11 +224,10 @@ def smallest_primitive_root(p):
         if valid:
             return g
 
-# Key Generation
-def elgamal_generate_keys(): 
-    p = randprime(math.pow(10, 20), math.pow(10, 50))
+def elgamal_generate_keys():
+    p = randprime(int(math.pow(10, 20)), int(math.pow(10, 50)))
     print(f"Prime number p = {p}")
-    g = smallest_primitive_root(p) 
+    g = smallest_primitive_root(p)
     print(f"Generator g = {g}")
     x = random.randint(1, p - 2)
     h = pow(g, x, p)
@@ -256,92 +239,91 @@ def elgamal_encrypt(public_key, message):
     for char in message:
         m = ord(char)
         if not (1 <= m <= p - 1):
-            raise ValueError(f"Character {char} is out of the valid range for encryption")
-        k = random.randint(1, p - 2)
-        C1 = pow(g, k, p)            # C1 = g^k mod p
-        S = pow(h, k, p)             # Shared secret S = h^k mod p
-        C2 = (m * S) % p             # C2 = (m * S) mod p
+            raise ValueError(f"Character {char} is out of valid range for encryption")
+        k_rand = random.randint(1, p - 2)
+        C1 = pow(g, k_rand, p)
+        S_val = pow(h, k_rand, p)
+        C2 = (m * S_val) % p
         encrypted_message.append((C1, C2))
     return encrypted_message
 
 def elgamal_decrypt(private_key, public_key, encrypted_message):
     p, g, _ = public_key
-    key = private_key
-    decrypted_message = []
+    decrypted_chars = []
     for C1, C2 in encrypted_message:
-        S = pow(C1, key, p)
-        S_inv = pow(S, -1, p)
+        S_val = pow(C1, private_key, p)
+        S_inv = pow(S_val, -1, p)
         m = (C2 * S_inv) % p
-        decrypted_message.append(chr(m))
-    return ''.join(decrypted_message)
+        decrypted_chars.append(chr(m))
+    return ''.join(decrypted_chars)
 
-# Helper function: convert ciphertext (int or list of ints) into bytes.
-def ciphertext_to_bytes(ciphertext):
-    if isinstance(ciphertext, list):
-        return b''.join([block.to_bytes(16, byteorder='big') for block in ciphertext])
-    else:
-        return ciphertext.to_bytes(16, byteorder='big')
-
+#######################################
+# Main function following the integrated workflow
+#######################################
 def main():
-    # Step 1: Take user input
-    user_input = input("Enter the string to encrypt: ")
-    print(f"Original Message (PT): {user_input}")
-
-    # Step 2: Encrypt plaintext with Kuznyechik
-    print("\n--- Encrypting Plaintext with Kuznyechik ---")
-    if len(user_input) > 16:
-        string_block = split_into_16_char_blocks(user_input)
-        ciphertext = encrypt_process_more_than_16_char(string_block)
-    else:
-        ciphertext = encrypt_process_less_than_16_char(user_input)
-    print(f"Ciphertext: {ciphertext}") 
-
-    # BLAKE2b Hash Generation (Step 3)
-    # Convert the ciphertext (whether a single block or list of blocks) to bytes
-    ct_bytes = ciphertext_to_bytes(ciphertext)
-    hash_obj = hashlib.blake2b(ct_bytes)
-    hash_digest = hash_obj.hexdigest()
-    print(f"\nBLAKE2b Hash of Ciphertext: {hash_digest}")
-
-    # Step 4: Encrypt the hash with ElGamal
-    print("\n--- Encrypting Hash with ElGamal ---")
+    # Step 1: Sender wishes to send a message.
+    original_message = input("Enter the string to encrypt: ")
+    print(f"\nOriginal Message (PT): {original_message}\n")
+    print(f"Kuznyechik Key (Hex): {hex(k)}\n")
+    
+    # Step 2: Generate BLAKE2b hash of the plaintext.
+    hash_obj = hashlib.blake2b(original_message.encode('utf-8'))
+    hash_plaintext = hash_obj.hexdigest()
+    print(f"BLAKE2b Hash of Plaintext: {hash_plaintext}\n")
+    
+    # Append the hash to the plaintext using a delimiter.
+    combined_message = original_message + "||" + hash_plaintext
+    print(f"Combined Message (Plaintext + Hash): {combined_message}\n")
+    
+    # Step 3: Encrypt the combined message using Kuznyechik.
+    print("--- Encrypting Combined Message with Kuznyechik ---")
+    blocks = split_into_16_char_blocks(combined_message)
+    ciphertext_blocks = encrypt_process_more_than_16_char(blocks)
+    print(f"\nCiphertext Blocks: {ciphertext_blocks}\n")
+    
+    # Step 4: Encrypt the hash with ElGamal.
+    print("--- Encrypting Hash with ElGamal ---")
     public_key, private_key = elgamal_generate_keys()
     print(f"Public Key: {public_key}")
     print(f"Private Key: {private_key}")
-    # The hash (a hex string) is encrypted character-by-character using ElGamal
-    encrypted_hash = elgamal_encrypt(public_key, hash_digest)
-    print(f"Encrypted Hash: {encrypted_hash}")
-
-    # Simulate sending both (ciphertext + encrypted hash) to the recipient
-
-    # Step 7: Recipient decrypts the appended encrypted hash using ElGamal
-    print("\n--- Decrypting Encrypted Hash with ElGamal ---")
+    encrypted_hash = elgamal_encrypt(public_key, hash_plaintext)
+    print(f"\nEncrypted Hash: {encrypted_hash}\n")
+    
+    # Simulate transmission...
+    
+    # Step 7: Recipient decrypts the encrypted hash using ElGamal.
+    print("--- Decrypting Encrypted Hash with ElGamal ---")
     decrypted_hash = elgamal_decrypt(private_key, public_key, encrypted_hash)
-    print(f"Decrypted Hash: {decrypted_hash}")
-
-    # Step 8: Recipient verifies the integrity of the message
-    recomputed_hash = hashlib.blake2b(ct_bytes).hexdigest()
-    print(f"Recomputed BLAKE2b Hash from Ciphertext: {recomputed_hash}")
-    if decrypted_hash == recomputed_hash:
+    print(f"Decrypted Hash: {decrypted_hash}\n")
+    
+    # Step 6: Recipient decrypts the combined message using Kuznyechik.
+    print("--- Decrypting Combined Message with Kuznyechik ---")
+    decrypted_blocks = decrypt_process_more_than_16_char(ciphertext_blocks)
+    combined_message_decrypted = "".join(decrypted_blocks)
+    print(f"\nDecrypted Combined Message: {combined_message_decrypted}\n")
+    
+    # Parse out the original plaintext and the appended hash.
+    try:
+        decrypted_plaintext, appended_hash = combined_message_decrypted.split("||", 1)
+    except ValueError:
+        print("Error: The decrypted message does not contain the expected delimiter '||'.")
+        return
+    
+    # Step 8: Verify the integrity of the message.
+    print("--- Integrity Verification ---")
+    recomputed_hash = hashlib.blake2b(decrypted_plaintext.encode('utf-8')).hexdigest()
+    print(f"Recomputed Hash: {recomputed_hash}")
+    if recomputed_hash == decrypted_hash:
         print(Fore.LIGHTGREEN_EX + "Integrity Verified: Hashes match!" + Style.RESET_ALL)
     else:
         print(Fore.RED + "Integrity Verification Failed: Hashes do not match!" + Style.RESET_ALL)
-
-    # Step 6: Decrypt plaintext with Kuznyechik
-    print("\n--- Decrypting Plaintext with Kuznyechik ---")
-    if isinstance(ciphertext, list):
-        decrypted_blocks = []
-        for block in ciphertext:
-            decrypted_blocks.append(decrypt_process_less_than_16_char(block))
-        decrypted_text = "".join(decrypted_blocks)
-    else:
-        decrypted_text = decrypt_process_less_than_16_char(ciphertext)
-    print(f"Decrypted Text: {decrypted_text}")
-
-    # Verify that the decrypted text matches the original input
-    if decrypted_text == user_input:
+    
+    # Step 9: Confirm the message's authenticity.
+    print(f"\nFinal Decrypted Plaintext: {decrypted_plaintext}")
+    if decrypted_plaintext == original_message:
         print(Fore.LIGHTGREEN_EX + "Decryption successful! Decrypted text matches original message." + Style.RESET_ALL)
     else:
         print(Fore.RED + "Decryption unsuccessful! Something went wrong!" + Style.RESET_ALL)
 
-main()
+if __name__ == "__main__":
+    main()
