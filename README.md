@@ -61,42 +61,42 @@ The integration of these 3 cryptographic components into a single, integrated cr
 
 Here’s a step-by-step breakdown of how the cryptosystem integrates the three cryptographic components to ensure secure communication and data handling:
 
-### Step 1: Sender wishes to send a Message
+### Step 1: Sender Wishes to Send a Message
 
 - The sender wants to send a secure message to the recipient.
 - The message is in plaintext format and needs to be encrypted to maintain confidentiality.
 
-### Step 2: Encrypt the Message (PT) Using Kuznyechik (Symmetric Encryption)
+### Step 2: Generate Hash of the Message Using BLAKE2b
 
-- The sender uses the **Kuznyechik ("Grasshopper") cipher** to encrypt the message.
+- To ensure `integrity` and `non-repudiation`, the sender generates a hash of the plaintext message.
+  - The sender uses **BLAKE2b**, a cryptographic hash function, to create a unique, fixed-length hash of the plaintext data.
+  - This hash acts as a digital fingerprint of the message.
+  - The hash is then **appended** to the original plaintext message before encryption.
+
+### Step 3: Encrypt the Message (PT + Hash) Using Kuznyechik (Symmetric Encryption)
+
+- The sender uses the **Kuznyechik ("Grasshopper") cipher** to encrypt the message along with its hash.
   - This is a symmetric encryption algorithm, where the same key is used for both encryption and decryption.
-  - The plaintext message is converted into ciphertext using the symmetric Kuznyechik key.
-  - The `confidentiality` of the message is ensured as only the authorized parties (who has access to the key) can decrypt it.
-
-### Step 3: Generate Hash of the Encrypted Message Using BLAKE2b
-
-- To ensure `integrity` and `non-repudiation`, the sender generates a hash of the encrypted ciphertext.
-  - The sender uses **BLAKE2b**, a cryptographic hash function, to create a unique, fixed-length hash of the encrypted data.
-  - This hash acts as a digital fingerprint of the encrypted message.
-  - The hash is then **appended** to the end of the encrypted ciphertext, forming a combined package that can be sent to the recipient.
+  - The combined plaintext message and hash are converted into ciphertext using the symmetric Kuznyechik key.
+  - The `confidentiality` of the message is ensured as only the authorized parties (who have access to the key) can decrypt it.
 
 ### Step 4: Encrypt the Hash with ElGamal (Asymmetric Encryption)
 
-- The sender then uses the **ElGamal encryption system** to encrypt the appended hash.
-  - This uses **asymmetric encryption** where a pair of keys (public and private) is used.
-  - The sender encrypts the hash (now appended to the ciphertext) using the **recipient’s public key**.
+- The sender then uses the **ElGamal encryption system** to encrypt the original hash separately.
+  - This uses **asymmetric encryption**, where a pair of keys (public and private) is used.
+  - The sender encrypts the original hash using the **recipient’s public key**.
   - This ensures `authentication` and `non-repudiation`, as only the recipient can decrypt the hash using their private key, verifying the integrity and authenticity of the sender's message.
 
-### Step 5: Send the Encrypted Message (with Appended Encrypted Hash) and the Sender’s Public Key to the Recipient
+### Step 5: Send the Encrypted Message and the Sender’s Public Key to the Recipient
 
 - The sender sends the following to the recipient:
-  - **Encrypted message with appended encrypted hash**: The ciphertext obtained from Kuznyechik encryption, with the hash encrypted using ElGamal appended to the end.
+  - **Encrypted message (ciphertext) with the appended plaintext hash (encrypted using ElGamal)**.
   - **Sender’s public key**: Used by the recipient to verify the authenticity of the sender and the message.
 
 ### Step 6: Recipient Decrypts the Encrypted Message Using Kuznyechik
 
 - The recipient uses their **private key** to decrypt the message that was encrypted using Kuznyechik.
-  - This will give them the original plaintext message.
+  - This will give them the original plaintext message along with the appended hash.
   - `Confidentiality` is maintained as only the intended recipient, who has the correct private key, can decrypt the message.
 
 ### Step 7: Recipient Decrypts the Appended Encrypted Hash Using Their Private Key (ElGamal)
@@ -106,7 +106,7 @@ Here’s a step-by-step breakdown of how the cryptosystem integrates the three c
 
 ### Step 8: Verify the Integrity of the Message
 
-- The recipient re-generates the hash of the decrypted ciphertext using `BLAKE2b`.
+- The recipient re-generates the hash of the decrypted plaintext message using `BLAKE2b`.
   - If the newly generated hash matches the decrypted hash from Step 7, it proves that the message has not been altered and is intact.
   - If the hashes match, the `integrity` and `non-repudiation` of the message are verified.
 
@@ -116,6 +116,8 @@ Here’s a step-by-step breakdown of how the cryptosystem integrates the three c
   - The message has not been tampered with (ensuring `integrity`).
   - The message was indeed sent by the rightful sender (ensuring `authentication`).
   - The sender cannot deny sending the message (ensuring `non-repudiation`).
+
+
 
 ---
 
