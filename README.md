@@ -4,7 +4,7 @@ CTG is a module in Semester 1.2 of the Cybersecurity and Digital Forensics (CSF)
 Digital Signature and Certificate, and the various encryption/decryption algorithms.
 
 This GitHub repository contains the Python script written for the module's assignment, where teams are expected to implement a simulated working prototype that would depict the operations and workings of the cryptographic algorithms.
-This cryptosystem  aims to fufil the 5 goals of Cryptography, namely _Confidentiality, Integrity, Availability, Authentication and Non-repudiation_.
+This cryptosystem  aims to fufil the 5 goals of Cryptography, namely _`Confidentiality`, `Integrity`, `Availability`, `Authentication` and `Non-repudiation`_.
 
 ## Table of Contents
 
@@ -28,6 +28,7 @@ The five goals of cryptography are fundamental in ensuring secure communication 
 This cryptosystem includes the implementation of:
 
 - **Symmetric Cryptosystem**: Kuznyechik ("Grasshopper") - Symmetric Block Cipher
+  - [Code](./grasshopper_algorithm.py)
 
 <div align="center">
   <img align="center" width="800" src="./assets/Kuznyechik Diagram.png" alt="Kuznyechik Diagram" />
@@ -35,6 +36,7 @@ This cryptosystem includes the implementation of:
 </div>
 
 - **Asymmetric Cryptosystem**: ElGamal Encryption System
+  - [Code](./ElGamal_algorithm.py)
 
 <div align="center">
   <img align="center" width="800" src="./assets/ElGamal Diagram.png" alt="ElGamal Diagram" />
@@ -42,6 +44,8 @@ This cryptosystem includes the implementation of:
 </div>
 
 - **Cryptographic Hash Function**: BLAKE2b
+  - [Code](./blake2b.py)
+
 <div align="center">
   <img align="center" width="800" src="./assets/blake2b.png" alt="blake2b Diagram" />
   <h4>Visual Representation of the blake2b hash cipher</h4>
@@ -52,14 +56,7 @@ This cryptosystem includes the implementation of:
 The integration of these 3 cryptographic components into a single, integrated cryptosystem ensures that all the goals of cryptography (`Confidentiality`,
 `Integrity`, `Availability`, `Authentication`, `Non-repudiation`) can be achieved effectively.
 
-<div align="center">
-  <img align="center" width="800" src="./assets/integration.png" alt="Diagram of cryptosystem with the integration of all 3 algorithms" />
-  <h4>Diagram of Integrated Cryptosystem</h4>
-</div>
-
 ## Integration Workflow (Steps)
-
-Here’s a step-by-step breakdown of how the cryptosystem integrates the three cryptographic components to ensure secure communication and data handling:
 
 ### Step 1: Sender Wishes to Send a Message
 
@@ -117,24 +114,22 @@ Here’s a step-by-step breakdown of how the cryptosystem integrates the three c
   - The message was indeed sent by the rightful sender (ensuring `authentication`).
   - The sender cannot deny sending the message (ensuring `non-repudiation`).
 
-
+This step-by-step integration ensures that all cryptographic goals are achieved effectively: **Confidentiality**, **Integrity**, **Availability**, **Authentication**, and **Non-repudiation**.
 
 ---
-
-This step-by-step integration ensures that all cryptographic goals are achieved effectively: **Confidentiality**, **Integrity**, **Availability**, **Authentication**, and **Non-repudiation**.
 
 # Getting Started
 
 1. Clone the Git repository:
 
 ```bash
-git clone https://github.com/Tan-JunWei/NP_1.2_CTG-ASG-Python-script.git
+git clone https://github.com/Tan-JunWei/NP_1.2_CTG-ASG.git
 ```
 
 2. Navigate to folder:
 
 ```bash
-cd NP_1.2_CTG-ASG-Python-script
+cd NP_1.2_CTG-ASG
 ```
 
 3. Install dependencies:
@@ -146,6 +141,6 @@ pip install -r requirements.txt
 4. Run the integrated script (WIP):
 
 ```bash
-python < INTEGRATED-script-name >.py
+python integrate_with_hash.py
 ```
 
